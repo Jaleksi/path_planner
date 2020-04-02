@@ -7,6 +7,7 @@ class Node:
         self.y = y
         self.pairs = []
         self.color = color
+        self.pairing = False
 
-    def within_reach(self, x, y):
-        return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2) < 10
+    def within_reach(self, mpos):
+        return math.sqrt((self.x - mpos[0]) ** 2 + (self.y - mpos[1]) ** 2) <= 8
