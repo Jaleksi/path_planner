@@ -43,21 +43,42 @@ class MainWindow(QtWidgets.QMainWindow):
         load_action.triggered.connect(self.load_image)
 
         # Mode actions
-        node_action = QtWidgets.QAction('Edit nodes', self)
-        node_action.triggered.connect(lambda: self.canvas.change_mode('node_edit'))
+        self.route_action = QtWidgets.QAction('Edit route', self)
+        self.route_action.triggered.connect(lambda: self.set_mode('route_edit'))
 
-        view_action = QtWidgets.QAction('View', self)
-        view_action.triggered.connect(lambda: self.canvas.change_mode('view'))
+        self.view_action = QtWidgets.QAction('View', self)
+        self.view_action.triggered.connect(lambda: self.set_mode('view'))
+        self.view_action.setEnabled(False)
+
+        self.target_action = QtWidgets.QAction('Edit targets', self)
+        self.target_action.triggered.connect(lambda: self.set_mode('target_edit'))
 
         mb = self.menuBar()
         filemenu = mb.addMenu('File')
-        filemenu_items = [exit_action, load_action]
+        filemenu_items = [load_action, exit_action]
         for item in filemenu_items:
             filemenu.addAction(item)
         modemenu = mb.addMenu('Mode')
-        modemenu_items = [node_action, view_action]
+        modemenu_items = [self.view_action, self.route_action, self.target_action]
         for item in modemenu_items:
             modemenu.addAction(item)
+
+    def set_mode(self, mode):
+        assert mode in ['view', 'target_edit', 'route_edit'], f'{mode} not valid mode'
+        if mode == 'route_edit':
+            self.route_action.setEnabled(False)
+            self.view_action.setEnabled(True)
+            self.target_action.setEnabled(True)
+        elif mode == 'view':
+            self.route_action.setEnabled(True)
+            self.view_action.setEnabled(False)
+            self.target_action.setEnabled(True)
+        elif mode == 'target_edit':
+            self.route_action.setEnabled(True)
+            self.view_action.setEnabled(True)
+            self.target_action.setEnabled(False)
+
+        self.canvas.change_mode(mode)
 
     def load_image(self):
         dialog = QtWidgets.QFileDialog(self)
