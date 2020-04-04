@@ -1,6 +1,8 @@
 # Standard
 import math
 
+# 3rd party
+from PyQt5.QtWidgets import QListWidgetItem
 
 class RouteNode:
     def __init__(self, x, y, color):
@@ -11,12 +13,19 @@ class RouteNode:
         self.pairing = False
 
     def within_reach(self, mpos):
-        return math.sqrt((self.x - mpos[0]) ** 2 + (self.y - mpos[1]) ** 2) <= 8
+        return points_distance((self.x, self.y), mpos) <= 8
 
 
-class TargetNode:
-    def __init__(self):
-        pass
+class TargetNode(QListWidgetItem):
+    def __init__(self, num, text, mx, my, actual_x, actual_y):
+        super().__init__()
+        self.num = num
+        self.text = text
+        self.x = actual_x
+        self.y = actual_y
+        self.draw_x = mx
+        self.draw_y = my
+        self.setText(f'[{self.num}] {self.text}')
 
 
 def closest_segment_point(point, route_pairs):
@@ -42,7 +51,7 @@ def closest_segment_point(point, route_pairs):
         dist = points_distance((x, y), point)
         if dist < dist_to_closest:
             dist_to_closest = dist
-            closest_point = (x, y)
+            closest_point = (int(x), int(y))
 
     return closest_point
 

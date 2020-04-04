@@ -12,10 +12,11 @@ from .widgets.item_list import ItemList
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('kauppa_router')
-        self.setGeometry(10, 10, 500, 500)
+        self.setWindowTitle('route_finder')
+        self.setGeometry(100, 100, 500, 500)
         self.init_menus()
         self.init_layout()
+        self.canvas.new_target_signal.connect(self.add_target_to_list)
 
     def init_layout(self):
         '''
@@ -64,7 +65,10 @@ class MainWindow(QtWidgets.QMainWindow):
             modemenu.addAction(item)
 
     def set_mode(self, mode):
+        if not self.canvas.allow_mode_change():
+            return
         assert mode in ['view', 'target_edit', 'route_edit'], f'{mode} not valid mode'
+        
         if mode == 'route_edit':
             self.route_action.setEnabled(False)
             self.view_action.setEnabled(True)
@@ -87,3 +91,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.canvas.new_image(img_path)
             self.resize(self.canvas.x() + self.canvas.image.width(),
                         self.canvas.y() + self.canvas.image.height())
+
+    def add_target_to_list(self, obj):
+        self.item_list.new_target(obj)
