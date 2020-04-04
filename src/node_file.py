@@ -29,6 +29,7 @@ class TargetNode(QListWidgetItem):
 
 
 def closest_segment_point(point, route_pairs):
+    # https://stackoverflow.com/questions/27161533/find-the-shortest-distance-between-a-point-and-line-segments-not-line
     closest_point = None
     dist_to_closest = math.inf
 
