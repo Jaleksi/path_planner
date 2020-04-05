@@ -17,14 +17,13 @@ class RouteNode:
 
 
 class TargetNode(QListWidgetItem):
-    def __init__(self, num, text, mx, my, actual_x, actual_y):
+    def __init__(self, num, text, mx, my, parent_node):
         super().__init__()
         self.num = num
         self.text = text
-        self.x = actual_x
-        self.y = actual_y
         self.draw_x = mx
         self.draw_y = my
+        self.parent_node = parent_node
         self.setText(f'[{self.num}] {self.text}')
 
 
@@ -32,6 +31,7 @@ def closest_segment_point(point, route_pairs):
     # https://stackoverflow.com/questions/27161533/find-the-shortest-distance-between-a-point-and-line-segments-not-line
     closest_point = None
     dist_to_closest = math.inf
+    pair = None
 
     for segment in route_pairs:
         point_a, point_b = segment[0], segment[1]
@@ -53,8 +53,9 @@ def closest_segment_point(point, route_pairs):
         if dist < dist_to_closest:
             dist_to_closest = dist
             closest_point = (int(x), int(y))
+            pair = segment
 
-    return closest_point
+    return closest_point, segment
 
 
 def points_distance(p1, p2):

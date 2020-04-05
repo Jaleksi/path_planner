@@ -11,7 +11,7 @@ class Canvas(QtWidgets.QLabel):
         super().__init__()
         self.image = None
         self.route_nodes = []
-        self.mode = 'View'
+        self.mode = 'view'
         self.selected_node = None
         self.pairing_node = None
         self.pairs = []
@@ -28,7 +28,7 @@ class Canvas(QtWidgets.QLabel):
 
         if mode == 'view':
             print([((p1.x, p1.y), (p2.x, p2.y)) for p1, p2 in self.pairs])
-            print([(n.x, n.y) for n in self.target_nodes])
+            print([(n.parent_node.x, n.parent_node.y) for n in self.target_nodes])
 
     def allow_mode_change(self):
         return self.image is not None
@@ -75,8 +75,8 @@ class Canvas(QtWidgets.QLabel):
         return (int(trns_x), int(trns_y))
 
     # Route-related methods
-    def add_route_node(self):
-        mx, my = self.mousepos
+    def add_route_node(self, pos=None):
+        mx, my = self.mousepos if pos is None else pos
         self.route_nodes.append(RouteNode(mx, my, (0, 0, 255)))
 
     def del_route_node(self):
@@ -96,20 +96,25 @@ class Canvas(QtWidgets.QLabel):
         self.pairing_node = None
         self.mode = 'route_edit'
 
-    # Target-related methods
-    def set_helper_dot_position(self):
-        pos = closest_segment_point(self.mousepos, self.pairs)
-        self.target_actual_pos = self.translate_original_to_resized(pos[0], pos[1])
+    def push_node_between_pairs(self, pair):
+        self.pairs.remove(pair)
+        node = self.route_nodes[-1]
+        for p in pair:
+            self.pairs.append((p, node))
 
+    
+    # Target-related methods
     def add_target_node(self):
         txt, done = QtWidgets.QInputDialog.getText(self, 'New target', 'Target name:')
         if not done or txt == '':
             return
         mx, my = self.mousepos
-        pos = closest_segment_point(self.mousepos, self.pairs)
+        pos, pair = closest_segment_point(self.mousepos, self.pairs)
 
         num = len(self.target_nodes) + 1
-        new_target = TargetNode(num, txt, mx, my, pos[0], pos[1])
+        self.add_route_node(pos)
+        self.push_node_between_pairs(pair)
+        new_target = TargetNode(num, txt, mx, my, self.route_nodes[-1])
         self.target_nodes.append(new_target)
         self.new_target_signal.emit(new_target)
 
@@ -128,10 +133,12 @@ class Canvas(QtWidgets.QLabel):
             
             for node in self.target_nodes:
                 drx, dry = self.translate_original_to_resized(node.draw_x, node.draw_y)
-                x, y = self.translate_original_to_resized(node.x, node.y)
+                x, y = self.translate_original_to_resized(node.parent_node.x,
+                        node.parent_node.y)
 
                 p.setPen(self.set_pen_style(pen, 'target_line'))
                 p.drawLine(drx, dry, x, y)
+
                 p.setPen(self.set_pen_style(pen, 'target_node_draw'))
                 p.drawEllipse(drx-3, dry-3, 6, 6)
                 p.setPen(self.set_pen_style(pen, 'text'))
