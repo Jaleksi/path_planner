@@ -9,3 +9,7 @@ class ItemList(QtWidgets.QListWidget):
     def new_target(self, target_obj):
         assert target_obj is not None, 'TARGET OBJECT NONE @ ITEM_LIST.py'
         self.addItem(target_obj)
+
+    def del_target(self, target):
+        target_index = self.row(target)
+        self.takeItem(target_index)

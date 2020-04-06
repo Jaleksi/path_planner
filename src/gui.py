@@ -17,6 +17,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.init_menus()
         self.init_layout()
         self.canvas.new_target_signal.connect(self.add_target_to_list)
+        self.canvas.del_target_signal.connect(self.remove_target_from_list)
 
     def init_layout(self):
         '''
@@ -68,7 +69,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.canvas.allow_mode_change():
             return
         assert mode in ['view', 'target_edit', 'route_edit'], f'{mode} not valid mode'
-        
+
         if mode == 'route_edit':
             self.route_action.setEnabled(False)
             self.view_action.setEnabled(True)
@@ -94,3 +95,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def add_target_to_list(self, obj):
         self.item_list.new_target(obj)
+
+    def remove_target_from_list(self, obj):
+        self.item_list.del_target(obj)
