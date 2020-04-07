@@ -14,8 +14,8 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.setWindowTitle('route_finder')
         self.setGeometry(100, 100, 500, 500)
-        self.init_menus()
         self.init_layout()
+        self.init_menus()
         self.canvas.new_target_signal.connect(self.add_target_to_list)
         self.canvas.del_target_signal.connect(self.remove_target_from_list)
 
@@ -44,6 +44,10 @@ class MainWindow(QtWidgets.QMainWindow):
         load_action = QtWidgets.QAction('Load image', self)
         load_action.triggered.connect(self.load_image)
 
+        # Calculate path
+        path_action = QtWidgets.QAction('Calculate path', self)
+        path_action.triggered.connect(self.canvas.calculate_path)
+
         # Mode actions
         self.route_action = QtWidgets.QAction('Edit route', self)
         self.route_action.triggered.connect(lambda: self.set_mode('route_edit'))
@@ -57,7 +61,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         mb = self.menuBar()
         filemenu = mb.addMenu('File')
-        filemenu_items = [load_action, exit_action]
+        filemenu_items = [load_action, exit_action, path_action]
         for item in filemenu_items:
             filemenu.addAction(item)
         modemenu = mb.addMenu('Mode')

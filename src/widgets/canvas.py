@@ -3,6 +3,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 
 # Local
 from ..node_file import RouteNode, TargetNode, closest_segment_point
+from ..path_utils.path_manager import PathManager
 
 
 class Canvas(QtWidgets.QLabel):
@@ -13,6 +14,8 @@ class Canvas(QtWidgets.QLabel):
         super().__init__()
         self.image = None
         self.route_nodes = []
+        self.start_node = None
+        self.end_node = None
         self.mode = 'view'
         self.selected_node = None
         self.pairing_node = None
@@ -57,6 +60,24 @@ class Canvas(QtWidgets.QLabel):
         pen.setWidth(width[style])
         return pen
 
+    def get_node_color(self, node):
+        node_colors = {
+            'normal': (0, 0, 255),
+            'pairing': (0, 255, 0),
+            'start': (0, 100, 50),
+            'end': (255, 0, 127),
+            'selected': (255, 0, 0)
+        }
+        if node == self.selected_node:
+            return node_colors['selected']
+        elif node == self.start_node:
+            return node_colors['start']
+        elif node == self.end_node:
+            return node_colors['end']
+        elif node == self.pairing_node:
+            return node_colors['pairing']
+        return node_colors['normal']
+
     def new_image(self, img):
         self.image = QtGui.QPixmap(img)
         self.update()
@@ -71,7 +92,26 @@ class Canvas(QtWidgets.QLabel):
         trns_y = y / (self.height() / self.image.height())
         return (int(trns_x), int(trns_y))
 
+    def calculate_path(self):
+        path_manager = PathManager(self.route_nodes, self.target_nodes, self.start_node,
+                                   self.end_node)
+        print(path_manager.distances)
+        a, b = path_manager.dj()
+        print(a)
+        print(b)
+
     # Route-related methods
+    def set_start_node(self):
+        self.start_node = self.selected_node
+        self.update()
+
+    def set_end_node(self):
+        if self.end_node is not None:
+            self.end_node.color = (0, 0, 255)
+        self.selected_node.color = (255, 0, 127)
+        self.end_node = self.selected_node
+        self.update()
+
     def add_route_node(self, pos=None):
         mx, my = self.mousepos if pos is None else pos
         self.route_nodes.append(RouteNode(mx, my, (0, 0, 255)))
@@ -84,6 +124,7 @@ class Canvas(QtWidgets.QLabel):
             if target.parent_node != self.selected_node:
                 continue
             self.remove_target(target)
+        self.update()
 
     def new_connection(self):
         pn, sn = self.pairing_node, self.selected_node
@@ -186,7 +227,7 @@ class Canvas(QtWidgets.QLabel):
         if self.route_nodes:
             pen.setWidth(10)
             for node in self.route_nodes:
-                r, g, b = node.color
+                r, g, b = self.get_node_color(node)
                 pen.setColor(QtGui.QColor(r, g, b))
                 p.setPen(pen)
                 x, y = self.translate_original_to_resized(node.x, node.y)
@@ -196,14 +237,13 @@ class Canvas(QtWidgets.QLabel):
         if event.buttons() == QtCore.Qt.LeftButton:
             if self.mode == 'route_edit' and self.selected_node is None:
                 self.add_route_node()
+            # DEBUG
+            elif self.mode == 'route_edit':
+                print(self.selected_node)
             elif self.mode == 'pairing' and self.selected_node is not None:
                 self.new_connection()
             elif self.mode == 'target_edit':
                 self.add_target_node()
-
-        elif event.buttons() == QtCore.Qt.RightButton:
-            if self.mode == 'route_edit' and self.selected_node is not None:
-                self.del_route_node()
         self.update()
 
     def mouseDoubleClickEvent(self, event):
@@ -229,10 +269,20 @@ class Canvas(QtWidgets.QLabel):
             for node in self.route_nodes:
                 if self.selected_node is None and node.within_reach(self.mousepos):
                     self.selected_node = node
-                    node.color = (255, 0, 0)
-                elif node.pairing:
-                    node.color = (0, 255, 0)
-                else:
-                    node.color = (0, 0, 255)
 
         self.update()
+
+    def contextMenuEvent(self, event):
+        if self.selected_node is None:
+            return
+        menu = QtWidgets.QMenu(self)
+        del_action = menu.addAction('Delete')
+        set_start = menu.addAction('Set as start')
+        set_end = menu.addAction('Set as end')
+        action = menu.exec_(self.mapToGlobal(event.pos()))
+        if action == del_action:
+            self.del_route_node()
+        elif action == set_start:
+            self.set_start_node()
+        elif action == set_end:
+            self.set_end_node()
