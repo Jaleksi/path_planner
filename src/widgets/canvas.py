@@ -52,6 +52,7 @@ class Canvas(QtWidgets.QLabel):
             }
         width = {
             'route_line': 3,
+            'route_line_shortest': 10,
             'target_help': 15,
             'target_node_draw': 10,
             'target_line': 3,
@@ -109,12 +110,16 @@ class Canvas(QtWidgets.QLabel):
             self.info_signal.emit('All nodes are not connected!')
             return
 
-        path_manager = PathManager(self.route_nodes, self.target_nodes, self.start_node,
-                                   self.end_node)
+        path_manager = PathManager(self, self.route_nodes, self.target_nodes,
+                                   self.start_node, self.end_node)
         distance, path = path_manager.get_shortest_route()
         self.shortest_path = path
         self.mode = 'view'
         self.toggle_menu_signal.emit('view')
+        self.update()
+
+    def update_progress(self, progress):
+        print(progress)
 
     # Route-related methods
     def set_start_node(self):
@@ -238,7 +243,8 @@ class Canvas(QtWidgets.QLabel):
         # Draw route
         route_lines = self.get_route_lines()
         if route_lines:
-            p.setPen(self.set_pen_style(pen, 'route_line'))
+            style = 'route_line_shortest' if self.shortest_path else 'route_line'
+            p.setPen(self.set_pen_style(pen, style))
             for p1, p2 in route_lines:
                 p1_x, p1_y = self.translate_original_to_resized(p1.x, p1.y)
                 p2_x, p2_y = self.translate_original_to_resized(p2.x, p2.y)

@@ -1,14 +1,20 @@
 # Standard
+from math import factorial
 from collections import defaultdict
 from itertools import permutations
 import heapq
+
+# 3rd party
+from PyQt5.QtWidgets import QProgressDialog
+from PyQt5 import QtCore
 
 # Local
 from ..node_file import points_distance
 
 
 class PathManager:
-    def __init__(self, nodes, targets, start, end):
+    def __init__(self, parent, nodes, targets, start, end):
+        self.canvas = parent
         self.nodes = nodes
         self.start_node = start
         self.end_node = end
@@ -44,9 +50,24 @@ class PathManager:
         the target nodes. Creates all possible permutations of the targets and
         returns the shortest path.
         '''
+        # Setup progress-bar
+        progress_bar = QProgressDialog(self.canvas)
+        progress_bar.setWindowTitle('Calculating all possible paths..')
+        progress_bar.setMaximum(factorial(len(self.target_nodes)))
+        progress_bar.setMinimum(0)
+        progress_bar.setWindowModality(QtCore.Qt.WindowModal)
+        progress_bar.forceShow()
+        permutation_count = 0
+
         shortest_distance = float('inf')
         shortest_route = None
+
         for perm in permutations(self.target_nodes):
+            if progress_bar.wasCanceled():
+                return 0, []
+            permutation_count += 1
+            progress_bar.setValue(permutation_count)
+
             dist, route = self.full_path_length(list(perm))
             if dist > shortest_distance:
                 continue

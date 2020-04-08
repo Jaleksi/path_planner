@@ -42,7 +42,7 @@ def closest_segment_point(point, route_pairs):
         node_a, node_b = segment[0], segment[1]
         dx = node_b.x - node_a.x
         dy = node_b.y - node_a.y
-        dr2 = float(dx ** 2 + dy ** 2)
+        dr2 = float(dx ** 2 + dy ** 2) + 0.0000001
 
         lerp = ((point[0] - node_a.x) * dx + (point[1] - node_a.y) * dy) / dr2
 

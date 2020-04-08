@@ -47,8 +47,8 @@ class MainWindow(QtWidgets.QMainWindow):
         load_action.triggered.connect(self.load_image)
 
         # Calculate path
-        path_action = QtWidgets.QAction('Calculate path', self)
-        path_action.triggered.connect(self.canvas.calculate_path)
+        dijkstra_action = QtWidgets.QAction('Dijkstra (absolute shortest)', self)
+        dijkstra_action.triggered.connect(self.canvas.calculate_path)
 
         # Mode actions
         self.route_action = QtWidgets.QAction('Edit route', self)
@@ -63,9 +63,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         mb = self.menuBar()
         filemenu = mb.addMenu('File')
-        filemenu_items = [load_action, path_action, exit_action]
-        for item in filemenu_items:
-            filemenu.addAction(item)
+        filemenu.addAction(load_action)
+        path_menu = filemenu.addMenu('Calculate path')
+        path_menu.addAction(dijkstra_action)
+        path_menu.addAction('Travelling salesman')
+        filemenu.addAction(exit_action)
+
         modemenu = mb.addMenu('Mode')
         modemenu_items = [self.view_action, self.route_action, self.target_action]
         for item in modemenu_items:
