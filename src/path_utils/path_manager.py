@@ -1,7 +1,9 @@
+# Standard
 from collections import defaultdict
 from itertools import permutations
 import heapq
 
+# Local
 from ..node_file import points_distance
 
 
@@ -9,20 +11,23 @@ class PathManager:
     def __init__(self, nodes, targets, start, end):
         self.nodes = nodes
         self.start_node = start
-        print(self.start_node)
         self.end_node = end
         self.target_nodes = [n.parent_node for n in targets]
         self.distances = self.get_unique_connections()
 
     def get_unique_connections(self):
-        '''conncetions = [(node_object, node_object, distance)...]'''
+        '''
+        Creates a list which contains all connections between nodes and the distance.
+        Stripts duplicate connections like (A, B), (B, A).
+        connections = [(node_object, node_object, distance), ...]
+        '''
         pairs = []
         for node in self.nodes:
             assert node.connects_with, 'Found node without connections, exiting.'
             for connection in node.connects_with:
                 # Continue if connection already in list from other node
-                if (node, connection)[::-1] in pairs:
-                    continue
+                #if (node, connection)[::-1] in pairs:
+                #    continue
                 pairs.append((node, connection))
 
         # Add distances
@@ -34,33 +39,49 @@ class PathManager:
         return connections
 
     def get_shortest_route(self):
+        '''
+        Gets shortest route between start node and end node while going through all
+        the target nodes. Creates all possible permutations of the targets and
+        returns the shortest path.
+        '''
         shortest_distance = float('inf')
         shortest_route = None
-        #for perm in permutations(self.target_nodes):
-        #    dist, route = self.full_path_length(list(perm))
-        #    if dist > shortest_distance:
-        #        continue
-        #    shortest_distance, shortest_route = dist, route
-        shortest_distance, shortest_route = self.full_path_length(list(self.target_nodes))
+        for perm in permutations(self.target_nodes):
+            dist, route = self.full_path_length(list(perm))
+            if dist > shortest_distance:
+                continue
+            shortest_distance, shortest_route = dist, route
         return shortest_distance, shortest_route
 
     def full_path_length(self, permutation):
+        '''
+        Calculates the distance between start- and end-node while going through the
+        target nodes for given permutation of targets.
+        '''
         total_distance = 0
         route = []
+
+        # Add start and end nodes to permutation
         permutation.insert(0, self.start_node)
         permutation.append(self.end_node)
+
         # Calculate target paths in permutation
         for i, node in enumerate(permutation[:-1]):
             dist, path = dijkstra(self.distances, node, permutation[i+1])
             total_distance += dist
-            route.extend(path)
+            # Remove last because it is in next paths first (remove duplicate)
+            route.extend(path[:-1])
+
+        route.append(self.end_node)
         return total_distance, route
 
-    def dj(self):
-        return dijkstra(self.distances, self.start_node, self.end_node)
 
 def dijkstra(edges, f, t):
-    '''https://gist.github.com/kachayev/5990802'''
+    '''
+    TAKEN FROM: https://gist.github.com/kachayev/5990802
+
+    Calculate the shortest route between given 2 nodes.
+    '''
 
     g = defaultdict(set)
     for l, r, c in edges:
@@ -72,7 +93,7 @@ def dijkstra(edges, f, t):
         (cost, v1, path) = heapq.heappop(q)
         if v1 not in seen:
             seen.add(v1)
-            path = (v1, )
+            path += (v1, )
             if v1 == t:
                 return cost, path
 
@@ -80,8 +101,8 @@ def dijkstra(edges, f, t):
                 if v2 in seen:
                     continue
                 prev = mins.get(v2, None)
-                next = cost + c
-                if prev is None or next < prev:
-                    mins[v2] = next
-                    heapq.heappush(q, (next, v2, path))
+                next_ = cost + c
+                if prev is None or next_ < prev:
+                    mins[v2] = next_
+                    heapq.heappush(q, (next_, v2, path))
     return float("inf")
