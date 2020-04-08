@@ -18,6 +18,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.init_menus()
         self.canvas.new_target_signal.connect(self.add_target_to_list)
         self.canvas.del_target_signal.connect(self.remove_target_from_list)
+        self.canvas.info_signal.connect(self.display_message)
+        self.canvas.toggle_menu_signal.connect(self.toggle_menu_buttons)
 
     def init_layout(self):
         '''
@@ -61,7 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         mb = self.menuBar()
         filemenu = mb.addMenu('File')
-        filemenu_items = [load_action, exit_action, path_action]
+        filemenu_items = [load_action, path_action, exit_action]
         for item in filemenu_items:
             filemenu.addAction(item)
         modemenu = mb.addMenu('Mode')
@@ -73,7 +75,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.canvas.allow_mode_change():
             return
         assert mode in ['view', 'target_edit', 'route_edit'], f'{mode} not valid mode'
+        self.toggle_menu_buttons(mode)
+        self.canvas.change_mode(mode)
 
+    def toggle_menu_buttons(self, mode):
+        assert mode in ['view', 'target_edit', 'route_edit'], f'{mode} not valid mode'
         if mode == 'route_edit':
             self.route_action.setEnabled(False)
             self.view_action.setEnabled(True)
@@ -86,8 +92,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.route_action.setEnabled(True)
             self.view_action.setEnabled(True)
             self.target_action.setEnabled(False)
-
-        self.canvas.change_mode(mode)
 
     def load_image(self):
         dialog = QtWidgets.QFileDialog(self)
@@ -102,3 +106,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def remove_target_from_list(self, obj):
         self.item_list.del_target(obj)
+
+    def display_message(self, msg):
+        mb = QtWidgets.QMessageBox()
+        mb.setIcon(QtWidgets.QMessageBox.Information)
+        mb.setWindowTitle('Info')
+        mb.setText(msg)
+        mb.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        mb.exec_()

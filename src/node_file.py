@@ -14,7 +14,7 @@ class RouteNode:
         self.pairing = False
 
     def within_reach(self, mpos):
-        return points_distance((self.x, self.y), mpos) <= 8
+        return points_distance((self.x, self.y), mpos) <= 10
 
 
 class TargetNode(QListWidgetItem):
@@ -29,7 +29,11 @@ class TargetNode(QListWidgetItem):
 
 
 def closest_segment_point(point, route_pairs):
-    # https://stackoverflow.com/questions/27161533/find-the-shortest-distance-between-a-point-and-line-segments-not-line
+    '''https://stackoverflow.com/questions/27161533/find-the-shortest-distance-between-a-point-and-line-segments-not-line
+
+    This function is used to draw line between target's actual position on the route
+    and graphic that shows target number (where user clicked).
+    '''
     closest_point = None
     dist_to_closest = math.inf
     pair = None
@@ -60,4 +64,5 @@ def closest_segment_point(point, route_pairs):
 
 
 def points_distance(p1, p2):
+    '''Returns distance between two points'''
     return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)

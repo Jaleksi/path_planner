@@ -7,8 +7,10 @@ from ..path_utils.path_manager import PathManager
 
 
 class Canvas(QtWidgets.QLabel):
+    info_signal = QtCore.pyqtSignal(str)
     new_target_signal = QtCore.pyqtSignal(object)
     del_target_signal = QtCore.pyqtSignal(object)
+    toggle_menu_signal = QtCore.pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -16,7 +18,8 @@ class Canvas(QtWidgets.QLabel):
         self.route_nodes = []
         self.start_node = None
         self.end_node = None
-        self.mode = 'view'
+        self.mode = 'route_edit'
+        self.shortest_path = []
         self.selected_node = None
         self.pairing_node = None
         self.target_nodes = []
@@ -24,11 +27,9 @@ class Canvas(QtWidgets.QLabel):
 
     # Canvas-related methods
     def change_mode(self, mode):
+        if mode != 'view' and self.shortest_path:
+            self.shortest_path = []
         self.mode = mode
-        if mode == 'target_edit':
-            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.CrossCursor)
-        else:
-            QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.ArrowCursor)
 
     def allow_mode_change(self):
         return self.image is not None
@@ -37,11 +38,13 @@ class Canvas(QtWidgets.QLabel):
         self.selected_node = None
         self.pairing_node.pairing = False
         self.pairing_node = None
-        self.mode = 'node_edit'
+        self.mode = 'route_edit'
+        self.toggle_menu_signal.emit('route_edit')
 
     def set_pen_style(self, pen, style):
         color = {
             'route_line': (0, 0, 255),
+            'route_line_shortest': (0, 255, 128),
             'target_help': (0, 255, 0),
             'target_node_draw': (255, 128, 0),
             'target_line': (255, 128, 0),
@@ -93,12 +96,25 @@ class Canvas(QtWidgets.QLabel):
         return (int(trns_x), int(trns_y))
 
     def calculate_path(self):
+        if self.start_node is None:
+            self.info_signal.emit('Start node is not set!')
+            return
+        elif self.end_node is None:
+            self.info_signal.emit('End node is not set!')
+            return
+        elif not self.target_nodes:
+            self.info_signal.emit('Zero targets set!')
+            return
+        elif any([True for n in self.route_nodes if not n.connects_with]):
+            self.info_signal.emit('All nodes are not connected!')
+            return
+
         path_manager = PathManager(self.route_nodes, self.target_nodes, self.start_node,
                                    self.end_node)
-        print(path_manager.distances)
-        a, b = path_manager.dj()
-        print(a)
-        print(b)
+        distance, path = path_manager.get_shortest_route()
+        self.shortest_path = path
+        self.mode = 'view'
+        self.toggle_menu_signal.emit('view')
 
     # Route-related methods
     def set_start_node(self):
@@ -118,7 +134,8 @@ class Canvas(QtWidgets.QLabel):
 
     def del_route_node(self):
         for node in self.route_nodes:
-            node.connects_with = [n for n in node.connects_with if n != self.selected_node]
+            cleaned_list = [n for n in node.connects_with if n != self.selected_node]
+            node.connects_with = cleaned_list
         self.route_nodes.remove(self.selected_node)
         for target in self.target_nodes:
             if target.parent_node != self.selected_node:
@@ -140,6 +157,7 @@ class Canvas(QtWidgets.QLabel):
         self.pairing_node.pairing = False
         self.pairing_node = None
         self.mode = 'route_edit'
+        self.toggle_menu_signal.emit('route_edit')
 
     def push_node_between_pairs(self, pair):
         n1, n2 = pair
@@ -153,15 +171,19 @@ class Canvas(QtWidgets.QLabel):
 
     def get_route_lines(self):
         lines = []
-        for node in self.route_nodes:
-            # Continue if node doesn't have any connections
-            if not node.connects_with:
-                continue
-            for connection in node.connects_with:
-                # Continue if connection already in list from other node
-                if (node, connection)[::-1] in lines:
+        if self.shortest_path and self.mode == 'view':
+            for n1, n2 in zip(self.shortest_path[:-1], self.shortest_path[1:]):
+                lines.append((n1, n2))
+        else:
+            for node in self.route_nodes:
+                # Continue if node doesn't have any connections
+                if not node.connects_with:
                     continue
-                lines.append((node, connection))
+                for connection in node.connects_with:
+                    # Continue if connection already in list from other node
+                    if (node, connection)[::-1] in lines:
+                        continue
+                    lines.append((node, connection))
         return lines
 
     # Target-related methods
@@ -201,12 +223,10 @@ class Canvas(QtWidgets.QLabel):
         p.setFont(QtGui.QFont('Decorative', 10))
         # Draw target
         if self.target_nodes:
-
             for node in self.target_nodes:
                 drx, dry = self.translate_original_to_resized(node.draw_x, node.draw_y)
                 x, y = self.translate_original_to_resized(node.parent_node.x,
                                                           node.parent_node.y)
-
                 p.setPen(self.set_pen_style(pen, 'target_line'))
                 p.drawLine(drx, dry, x, y)
 
@@ -224,7 +244,7 @@ class Canvas(QtWidgets.QLabel):
                 p2_x, p2_y = self.translate_original_to_resized(p2.x, p2.y)
                 p.drawLine(p1_x, p1_y, p2_x, p2_y)
 
-        if self.route_nodes:
+        if self.route_nodes and self.mode != 'view':
             pen.setWidth(10)
             for node in self.route_nodes:
                 r, g, b = self.get_node_color(node)
@@ -237,9 +257,6 @@ class Canvas(QtWidgets.QLabel):
         if event.buttons() == QtCore.Qt.LeftButton:
             if self.mode == 'route_edit' and self.selected_node is None:
                 self.add_route_node()
-            # DEBUG
-            elif self.mode == 'route_edit':
-                print(self.selected_node)
             elif self.mode == 'pairing' and self.selected_node is not None:
                 self.new_connection()
             elif self.mode == 'target_edit':
