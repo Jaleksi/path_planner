@@ -21,6 +21,14 @@ class PathManager:
         self.target_nodes = [n.parent_node for n in targets]
         self.distances = self.get_unique_connections()
 
+    def create_progressbar(self, msg, maximum):
+        self.pb = QProgressDialog(self.canvas)
+        self.pb.setWindowTitle(msg)
+        self.pb.setMaximum(maximum)
+        self.pb.setMinimum(0)
+        self.pb.setWindowModality(QtCore.Qt.WindowModal)
+        self.pb.forceShow()
+
     def get_unique_connections(self):
         '''
         Creates a list which contains all connections between nodes and the distance.
@@ -50,23 +58,18 @@ class PathManager:
         the target nodes. Creates all possible permutations of the targets and
         returns the shortest path.
         '''
-        # Setup progress-bar
-        progress_bar = QProgressDialog(self.canvas)
-        progress_bar.setWindowTitle('Calculating all possible paths..')
-        progress_bar.setMaximum(factorial(len(self.target_nodes)))
-        progress_bar.setMinimum(0)
-        progress_bar.setWindowModality(QtCore.Qt.WindowModal)
-        progress_bar.forceShow()
+        self.create_progressbar('Calculating all possible paths..',
+                                factorial(len(self.target_nodes)))
         permutation_count = 0
 
         shortest_distance = float('inf')
         shortest_route = None
 
         for perm in permutations(self.target_nodes):
-            if progress_bar.wasCanceled():
+            if self.pb.wasCanceled():
                 return 0, []
             permutation_count += 1
-            progress_bar.setValue(permutation_count)
+            self.pb.setValue(permutation_count)
 
             dist, route = self.full_path_length(list(perm))
             if dist > shortest_distance:
