@@ -64,9 +64,11 @@ class MainWindow(QtWidgets.QMainWindow):
         mb = self.menuBar()
         filemenu = mb.addMenu('File')
         filemenu.addAction(load_action)
-        path_menu = filemenu.addMenu('Calculate path')
-        path_menu.addAction(dijkstra_action)
-        path_menu.addAction('Travelling salesman')
+        self.path_menu = filemenu.addMenu('Calculate path')
+        self.path_menu.addAction(dijkstra_action)
+        self.path_menu.addAction('Travelling salesman')
+        self.path_menu.setEnabled(False)
+
         filemenu.addAction(exit_action)
 
         modemenu = mb.addMenu('Mode')
@@ -82,7 +84,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.change_mode(mode)
 
     def toggle_menu_buttons(self, mode):
-        assert mode in ['view', 'target_edit', 'route_edit'], f'{mode} not valid mode'
         if mode == 'route_edit':
             self.route_action.setEnabled(False)
             self.view_action.setEnabled(True)
@@ -95,6 +96,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.route_action.setEnabled(True)
             self.view_action.setEnabled(True)
             self.target_action.setEnabled(False)
+        elif mode == 'allow_path_calculate':
+            self.path_menu.setEnabled(True)
 
     def load_image(self):
         dialog = QtWidgets.QFileDialog(self)

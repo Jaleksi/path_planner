@@ -84,6 +84,7 @@ class Canvas(QtWidgets.QLabel):
 
     def new_image(self, img):
         self.image = QtGui.QPixmap(img)
+        self.toggle_menu_signal.emit('allow_path_calculate')
         self.update()
 
     def translate_original_to_resized(self, x, y):
@@ -110,16 +111,17 @@ class Canvas(QtWidgets.QLabel):
             self.info_signal.emit('All nodes are not connected!')
             return
 
-        path_manager = PathManager(self, self.route_nodes, self.target_nodes,
+        progress_bar = QtWidgets.QProgressDialog(self)
+        progress_bar.setWindowModality(QtCore.Qt.WindowModal)
+        path_manager = PathManager(progress_bar, self.route_nodes, self.target_nodes,
                                    self.start_node, self.end_node)
         distance, path = path_manager.get_shortest_route()
+        if not path:
+            return
         self.shortest_path = path
         self.mode = 'view'
         self.toggle_menu_signal.emit('view')
         self.update()
-
-    def update_progress(self, progress):
-        print(progress)
 
     # Route-related methods
     def set_start_node(self):
