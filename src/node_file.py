@@ -27,6 +27,9 @@ class TargetNode(QListWidgetItem):
         self.parent_node = parent_node
         self.setText(f'[{self.num}] {self.text}')
 
+    def update_text(self):
+        self.setText(f'[{self.num}] {self.text}')
+
 
 def closest_segment_point(point, route_pairs):
     '''https://stackoverflow.com/questions/27161533/find-the-shortest-distance-between-a-point-and-line-segments-not-line

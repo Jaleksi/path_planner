@@ -48,7 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Calculate path
         dijkstra_action = QtWidgets.QAction('Dijkstra (absolute shortest)', self)
-        dijkstra_action.triggered.connect(self.canvas.calculate_path)
+        dijkstra_action.triggered.connect(lambda: self.calculate_path('dijkstra'))
 
         # Mode actions
         self.route_action = QtWidgets.QAction('Edit route', self)
@@ -120,3 +120,12 @@ class MainWindow(QtWidgets.QMainWindow):
         mb.setText(msg)
         mb.setStandardButtons(QtWidgets.QMessageBox.Ok)
         mb.exec_()
+
+    def calculate_path(self, algo):
+        if algo == 'dijkstra':
+            self.canvas.calculate_path()
+        elif algo == 'tsp':
+            pass
+        found_path = self.canvas.shortest_path
+        if found_path:
+            self.item_list.arrange_items(found_path)

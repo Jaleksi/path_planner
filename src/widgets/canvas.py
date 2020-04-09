@@ -216,7 +216,7 @@ class Canvas(QtWidgets.QLabel):
     def update_list_numbers(self):
         for i, item in enumerate(self.target_nodes):
             item.num = i+1
-            item.setText(f'[{item.num}] {item.text}')
+            item.update_text()
 
     # Events
     def paintEvent(self, event):
