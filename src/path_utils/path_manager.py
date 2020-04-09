@@ -18,10 +18,22 @@ class PathManager:
         self.distances = self.get_unique_connections()
 
     def activate_progressbar(self, msg, maximum):
+        '''Set message and max value for progress bar'''
         self.pb.setWindowTitle(msg)
         self.pb.setMaximum(maximum)
         self.pb.setMinimum(0)
         self.pb.forceShow()
+
+    def get_shortest_route(self, mode):
+        '''
+        dijkstra: Go through all possible routes/permutations of targets and return
+        shortest
+        tsp: Treat path as travelling salesman -problem, not as accurate
+        '''
+        if mode == 'dijkstra':
+            return self.absolute_shortest_path()
+        elif mode == 'tsp':
+            return self.tsp_shortest_path()
 
     def get_unique_connections(self):
         '''
@@ -46,7 +58,7 @@ class PathManager:
             connections.append(con + (distance, ))
         return connections
 
-    def get_shortest_route(self):
+    def absolute_shortest_path(self):
         '''
         Gets shortest route between start node and end node while going through all
         the target nodes. Creates all possible permutations of the targets and

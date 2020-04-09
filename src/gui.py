@@ -122,10 +122,7 @@ class MainWindow(QtWidgets.QMainWindow):
         mb.exec_()
 
     def calculate_path(self, algo):
-        if algo == 'dijkstra':
-            self.canvas.calculate_path()
-        elif algo == 'tsp':
-            pass
+        self.canvas.calculate_path(algo)
         found_path = self.canvas.shortest_path
         if found_path:
             self.item_list.arrange_items(found_path)

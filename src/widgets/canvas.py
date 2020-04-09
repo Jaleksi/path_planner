@@ -48,15 +48,19 @@ class Canvas(QtWidgets.QLabel):
             'target_help': (0, 255, 0),
             'target_node_draw': (255, 128, 0),
             'target_line': (255, 128, 0),
-            'text': (0, 0, 0)
+            'text': (0, 0, 0),
+            'start_node': (0, 100, 50),
+            'end_node': (100, 0, 0)
             }
         width = {
             'route_line': 3,
-            'route_line_shortest': 10,
+            'route_line_shortest': 6,
             'target_help': 15,
             'target_node_draw': 10,
             'target_line': 3,
-            'text': 5
+            'text': 5,
+            'start_node': 10,
+            'end_node': 10
             }
 
         r, g, b = color[style]
@@ -97,7 +101,7 @@ class Canvas(QtWidgets.QLabel):
         trns_y = y / (self.height() / self.image.height())
         return (int(trns_x), int(trns_y))
 
-    def calculate_path(self):
+    def calculate_path(self, mode):
         if self.start_node is None:
             self.info_signal.emit('Start node is not set!')
             return
@@ -115,7 +119,7 @@ class Canvas(QtWidgets.QLabel):
         progress_bar.setWindowModality(QtCore.Qt.WindowModal)
         path_manager = PathManager(progress_bar, self.route_nodes, self.target_nodes,
                                    self.start_node, self.end_node)
-        distance, path = path_manager.get_shortest_route()
+        distance, path = path_manager.get_shortest_route(mode)
         if not path:
             return
         self.shortest_path = path
@@ -251,6 +255,12 @@ class Canvas(QtWidgets.QLabel):
                 p1_x, p1_y = self.translate_original_to_resized(p1.x, p1.y)
                 p2_x, p2_y = self.translate_original_to_resized(p2.x, p2.y)
                 p.drawLine(p1_x, p1_y, p2_x, p2_y)
+            if self.shortest_path and self.mode == 'view':
+                start_and_end = [self.start_node, self.end_node]
+                for node, style in zip(start_and_end, ['start_node', 'end_node']):
+                    p.setPen(self.set_pen_style(pen, style))
+                    x, y = self.translate_original_to_resized(node.x, node.y)
+                    p.drawEllipse(x-5, y-5, 10, 10)
 
         if self.route_nodes and self.mode != 'view':
             pen.setWidth(10)

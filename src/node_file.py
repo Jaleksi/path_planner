@@ -3,6 +3,7 @@ import math
 
 # 3rd party
 from PyQt5.QtWidgets import QListWidgetItem
+from PyQt5 import QtCore
 
 
 class RouteNode:
@@ -25,7 +26,7 @@ class TargetNode(QListWidgetItem):
         self.draw_x = mx
         self.draw_y = my
         self.parent_node = parent_node
-        self.setText(f'[{self.num}] {self.text}')
+        self.update_text()
 
     def update_text(self):
         self.setText(f'[{self.num}] {self.text}')
