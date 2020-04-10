@@ -47,9 +47,12 @@ class MainWindow(QtWidgets.QMainWindow):
         load_action.triggered.connect(self.load_image)
 
         # Calculate path
-        dijkstra_action = QtWidgets.QAction('Dijkstra (absolute shortest)', self)
+        dijkstra_action = QtWidgets.QAction('Absolute shortest', self)
         dijkstra_action.triggered.connect(lambda: self.calculate_path('dijkstra'))
 
+        tsp_action = QtWidgets.QAction('Approximate', self)
+        tsp_action.triggered.connect(lambda: self.calculate_path('tsp'))
+        
         # Mode actions
         self.route_action = QtWidgets.QAction('Edit route', self)
         self.route_action.triggered.connect(lambda: self.set_mode('route_edit'))
@@ -66,7 +69,7 @@ class MainWindow(QtWidgets.QMainWindow):
         filemenu.addAction(load_action)
         self.path_menu = filemenu.addMenu('Calculate path')
         self.path_menu.addAction(dijkstra_action)
-        self.path_menu.addAction('Travelling salesman')
+        self.path_menu.addAction(tsp_action)
         self.path_menu.setEnabled(False)
 
         filemenu.addAction(exit_action)

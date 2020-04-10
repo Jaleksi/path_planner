@@ -1,12 +1,11 @@
 # Standard
 from math import factorial
-from collections import defaultdict
 from itertools import permutations
-import heapq
 
 # Local
 from ..node_file import points_distance
-
+from .dijkstra import dijkstra
+from .tsp import tsp
 
 class PathManager:
     def __init__(self, progress_bar, nodes, targets, start, end):
@@ -33,8 +32,9 @@ class PathManager:
         if mode == 'dijkstra':
             return self.absolute_shortest_path()
         elif mode == 'tsp':
-            return self.tsp_shortest_path()
+            return self.shortest_by_tsp()
 
+    # Absolute shortest route methods
     def get_unique_connections(self):
         '''
         Creates a list which contains all connections between nodes and the distance.
@@ -105,34 +105,27 @@ class PathManager:
         route.append(self.end_node)
         return total_distance, route
 
+    # Travelling salesman methods
+    def shortest_by_tsp(self):
+        distances, paths, node_indexes = self.target_nodes_distances()
+        num_of_nodes = len(self.target_nodes) + 2
+        print(tsp(distances=distances, num_of_nodes=num_of_nodes))
+        return 0, []
 
-def dijkstra(edges, f, t):
-    '''
-    TAKEN FROM: https://gist.github.com/kachayev/5990802
-
-    Calculate the shortest route between given 2 nodes.
-    '''
-
-    g = defaultdict(set)
-    for l, r, c in edges:
-        g[l].add((c, r))
-        g[r].add((c, l))
-
-    q, seen, mins = [(0, f, ())], set(), {f: 0}
-    while q:
-        (cost, v1, path) = heapq.heappop(q)
-        if v1 not in seen:
-            seen.add(v1)
-            path += (v1, )
-            if v1 == t:
-                return cost, path
-
-            for c, v2 in g.get(v1, ()):
-                if v2 in seen:
-                    continue
-                prev = mins.get(v2, None)
-                next_ = cost + c
-                if prev is None or next_ < prev:
-                    mins[v2] = next_
-                    heapq.heappush(q, (next_, v2, path))
-    return float("inf")
+    def target_nodes_distances(self):
+        '''
+        Get distances between targets with dijkstra.
+        [(nodex, nodey, distance_by_path)...]
+        '''
+        nodes = self.target_nodes.copy()
+        nodes.extend([self.start_node, self.end_node])
+        node_indexes = {}
+        target_distances = []
+        target_paths = []
+        for i, n1 in enumerate(nodes):
+            node_indexes[i] = n1
+            for j, n2 in enumerate(nodes[i+1:]):
+                dist, path = dijkstra(self.distances, n1, n2)
+                target_distances.append((i, i+j+1, dist))
+                target_paths.append((n1, n2, path))
+        return target_distances, target_paths, node_indexes
