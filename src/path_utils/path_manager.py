@@ -109,13 +109,15 @@ class PathManager:
     def shortest_by_tsp(self):
         distances, paths, node_indexes = self.target_nodes_distances()
         num_of_nodes = len(self.target_nodes) + 2
-        print(tsp(distances=distances, num_of_nodes=num_of_nodes))
+        tsp_path = tsp(distances=distances, num_of_nodes=num_of_nodes)
+        print(self.indexlist_to_path(node_indexes, paths, tsp_path))
+        #print(paths)
         return 0, []
 
     def target_nodes_distances(self):
         '''
         Get distances between targets with dijkstra.
-        [(nodex, nodey, distance_by_path)...]
+        [(index_of_fist_node, index_of_second_node, distance_by_path)...]
         '''
         nodes = self.target_nodes.copy()
         nodes.extend([self.start_node, self.end_node])
@@ -129,3 +131,24 @@ class PathManager:
                 target_distances.append((i, i+j+1, dist))
                 target_paths.append((n1, n2, path))
         return target_distances, target_paths, node_indexes
+
+    def indexlist_to_path(self, node_indexes, paths, tsp_path):
+        '''Make node-to-node path (list) from tsp-path, which is a list of indexes'''
+        shortest_path = []
+        for i, node_index in enumerate(tsp_path[:-1]):
+            node = node_indexes[node_index]
+            next_node = node_indexes[tsp_path[i+1]]
+            path_between_nodes = self.get_path_between_nodes(node, next_node, paths)
+            shortest_path.extend(path_between_nodes)
+        return shortest_path
+
+
+    def get_path_between_nodes(self, n1, n2, paths):
+        '''Find path between nodes which was calculated earlier in target_nodes_distances()'''
+        for route in paths:
+            connection = (route[0], route[1])
+            if connection == (n1, n2):
+                return list(route[2][:-1])
+            elif connection == (n2, n1):
+                return list(route[2][::-1][:-1])
+        return None

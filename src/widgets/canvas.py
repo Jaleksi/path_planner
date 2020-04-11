@@ -115,8 +115,10 @@ class Canvas(QtWidgets.QLabel):
             self.info_signal.emit('All nodes are not connected!')
             return
 
-        progress_bar = QtWidgets.QProgressDialog(self)
-        progress_bar.setWindowModality(QtCore.Qt.WindowModal)
+        progress_bar = None
+        if mode == 'dijkstra':
+            progress_bar = QtWidgets.QProgressDialog(self)
+            progress_bar.setWindowModality(QtCore.Qt.WindowModal)
         path_manager = PathManager(progress_bar, self.route_nodes, self.target_nodes,
                                    self.start_node, self.end_node)
         distance, path = path_manager.get_shortest_route(mode)
@@ -275,6 +277,9 @@ class Canvas(QtWidgets.QLabel):
         if event.buttons() == QtCore.Qt.LeftButton:
             if self.mode == 'route_edit' and self.selected_node is None:
                 self.add_route_node()
+            # DEBUG
+            elif self.mode == 'route_edit' and self.selected_node is not None:
+                print(self.selected_node)
             elif self.mode == 'pairing' and self.selected_node is not None:
                 self.new_connection()
             elif self.mode == 'target_edit':
