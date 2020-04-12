@@ -108,11 +108,11 @@ class PathManager:
     # Travelling salesman methods
     def shortest_by_tsp(self):
         distances, paths, node_indexes = self.target_nodes_distances()
-        num_of_nodes = len(self.target_nodes) + 2
+        # Add 3 because start-/end-node + dummy are not included in targets
+        num_of_nodes = len(self.target_nodes) + 3
         tsp_path = tsp(distances=distances, num_of_nodes=num_of_nodes)
-        print(self.indexlist_to_path(node_indexes, paths, tsp_path))
-        #print(paths)
-        return 0, []
+        node_path = self.indexlist_to_path(node_indexes, paths, tsp_path)
+        return 0, node_path
 
     def target_nodes_distances(self):
         '''
@@ -121,15 +121,26 @@ class PathManager:
         '''
         nodes = self.target_nodes.copy()
         nodes.extend([self.start_node, self.end_node])
-        node_indexes = {}
+        node_indexes = {
+            0: 'dummy'
+        }
         target_distances = []
         target_paths = []
+
+        # Make sure distance is never the same
+        deny_equal = 0.0000001
         for i, n1 in enumerate(nodes):
-            node_indexes[i] = n1
+            node_indexes[i+1] = n1
+            # Add dummy distance/path to set start and end point
+            dist = deny_equal if n1 in [self.start_node, self.end_node] else 10000 + deny_equal
+            target_distances.append((i+1, 0, dist))
+            target_paths.append((n1, 'dummy', ()))
+            deny_equal += deny_equal
             for j, n2 in enumerate(nodes[i+1:]):
                 dist, path = dijkstra(self.distances, n1, n2)
-                target_distances.append((i, i+j+1, dist))
+                target_distances.append((i+1, i+j+2, dist))
                 target_paths.append((n1, n2, path))
+        
         return target_distances, target_paths, node_indexes
 
     def indexlist_to_path(self, node_indexes, paths, tsp_path):
@@ -140,6 +151,7 @@ class PathManager:
             next_node = node_indexes[tsp_path[i+1]]
             path_between_nodes = self.get_path_between_nodes(node, next_node, paths)
             shortest_path.extend(path_between_nodes)
+        shortest_path.append(self.end_node)
         return shortest_path
 
 
