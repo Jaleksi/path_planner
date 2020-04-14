@@ -7,6 +7,7 @@ from PyQt5 import QtWidgets
 # Local
 from .widgets.canvas import Canvas
 from .widgets.item_list import ItemList
+from .node_file import save_nodes_to_file
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -46,13 +47,18 @@ class MainWindow(QtWidgets.QMainWindow):
         load_action = QtWidgets.QAction('Load image', self)
         load_action.triggered.connect(self.load_image)
 
+        # Save nodes
+        self.save_action = QtWidgets.QAction('Save nodes', self)
+        self.save_action.triggered.connect(self.save_to_file)
+        self.save_action.setEnabled(False)
+
         # Calculate path
         dijkstra_action = QtWidgets.QAction('Absolute shortest', self)
         dijkstra_action.triggered.connect(lambda: self.calculate_path('dijkstra'))
 
         tsp_action = QtWidgets.QAction('Approximate', self)
         tsp_action.triggered.connect(lambda: self.calculate_path('tsp'))
-        
+
         # Mode actions
         self.route_action = QtWidgets.QAction('Edit route', self)
         self.route_action.triggered.connect(lambda: self.set_mode('route_edit'))
@@ -66,7 +72,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         mb = self.menuBar()
         filemenu = mb.addMenu('File')
-        filemenu.addAction(load_action)
+        for item in [self.save_action, load_action]:
+            filemenu.addAction(item)
         self.path_menu = filemenu.addMenu('Calculate path')
         self.path_menu.addAction(dijkstra_action)
         self.path_menu.addAction(tsp_action)
@@ -101,6 +108,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.target_action.setEnabled(False)
         elif mode == 'allow_path_calculate':
             self.path_menu.setEnabled(True)
+        elif mode == 'allow_save':
+            self.save_action.setEnabled(True)
 
     def load_image(self):
         dialog = QtWidgets.QFileDialog(self)
@@ -129,3 +138,6 @@ class MainWindow(QtWidgets.QMainWindow):
         found_path = self.canvas.shortest_path
         if found_path:
             self.item_list.arrange_items(found_path)
+
+    def save_to_file(self):
+        save_nodes_to_file(1, 2)
