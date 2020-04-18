@@ -13,6 +13,7 @@ from .node_file import save_nodes_to_file
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
+        self.file_name = None
         self.setWindowTitle('route_finder')
         self.setGeometry(100, 100, 500, 500)
         self.init_layout()
@@ -108,16 +109,18 @@ class MainWindow(QtWidgets.QMainWindow):
             self.target_action.setEnabled(False)
         elif mode == 'allow_path_calculate':
             self.path_menu.setEnabled(True)
-        elif mode == 'allow_save':
-            self.save_action.setEnabled(True)
 
     def load_image(self):
         dialog = QtWidgets.QFileDialog(self)
         img_path, _ = dialog.getOpenFileName(self, "Load image", "")
-        if os.path.exists(img_path):
-            self.canvas.new_image(img_path)
-            self.resize(self.canvas.x() + self.canvas.image.width(),
-                        self.canvas.y() + self.canvas.image.height())
+        if not os.path.exists(img_path):
+            return
+
+        self.save_action.setEnabled(True)
+        self.file_name = os.path.basename(img_path)
+        self.canvas.new_image(img_path)
+        self.resize(self.canvas.x() + self.canvas.image.width(),
+                    self.canvas.y() + self.canvas.image.height())
 
     def add_target_to_list(self, obj):
         self.item_list.new_target(obj)
@@ -140,4 +143,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.item_list.arrange_items(found_path)
 
     def save_to_file(self):
-        save_nodes_to_file(1, 2)
+        print(self.file_name)
+        route_nodes = self.canvas.route_nodes
+        save_nodes_to_file(route_nodes, 0)

@@ -3,7 +3,6 @@ import math
 
 # 3rd party
 from PyQt5.QtWidgets import QListWidgetItem
-from PyQt5 import QtCore
 
 
 class RouteNode:
@@ -73,4 +72,5 @@ def points_distance(p1, p2):
 
 
 def save_nodes_to_file(route_nodes, target_nodes):
-    print("ok")
+    r_nodes = [(n.x, n.y) for n in route_nodes]
+    print(r_nodes)
