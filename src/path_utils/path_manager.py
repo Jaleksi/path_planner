@@ -110,7 +110,10 @@ class PathManager:
         distances, paths, node_indexes = self.target_nodes_distances()
         # Add 3 because start-/end-node + dummy are not included in targets
         num_of_nodes = len(self.target_nodes) + 3
-        tsp_path = tsp(distances=distances, num_of_nodes=num_of_nodes)
+        tsp_path = list(tsp(distances=distances, num_of_nodes=num_of_nodes))
+        start_index = self.get_start_node_index(node_indexes)
+        while tsp_path[0] != start_index:
+            tsp_path.insert(0, tsp_path.pop())
         node_path = self.indexlist_to_path(node_indexes, paths, tsp_path)
         return 0, node_path
 
@@ -163,4 +166,10 @@ class PathManager:
                 return list(route[2][:-1])
             elif connection == (n2, n1):
                 return list(route[2][::-1][:-1])
+        return None
+
+    def get_start_node_index(self, index_list):
+        for index, node in index_list.items():
+            if node == self.start_node:
+                return index
         return None
