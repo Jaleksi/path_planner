@@ -7,7 +7,7 @@ from PyQt5 import QtWidgets
 # Local
 from .widgets.canvas import Canvas
 from .widgets.item_list import ItemList
-from .node_file import save_nodes_to_file
+from .node_file import save_nodes_to_file, load_nodes_from_file
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -48,6 +48,10 @@ class MainWindow(QtWidgets.QMainWindow):
         load_action = QtWidgets.QAction('Load image', self)
         load_action.triggered.connect(self.load_image)
 
+        # Load nodes
+        node_load_action = QtWidgets.QAction('Load nodes', self)
+        node_load_action.triggered.connect(self.load_from_file)
+
         # Save nodes
         self.save_action = QtWidgets.QAction('Save nodes', self)
         self.save_action.triggered.connect(self.save_to_file)
@@ -73,7 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         mb = self.menuBar()
         filemenu = mb.addMenu('File')
-        for item in [self.save_action, load_action]:
+        for item in [self.save_action, node_load_action, load_action]:
             filemenu.addAction(item)
         self.path_menu = filemenu.addMenu('Calculate path')
         self.path_menu.addAction(dijkstra_action)
@@ -117,10 +121,11 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         self.save_action.setEnabled(True)
-        self.file_name = os.path.basename(img_path)
+        self.img_file = img_path
         self.canvas.new_image(img_path)
-        self.resize(self.canvas.x() + self.canvas.image.width(),
-                    self.canvas.y() + self.canvas.image.height())
+        img_x = self.canvas.image.width()
+        img_y = self.canvas.image.height()
+        self.resize(self.canvas.x() + img_x, self.canvas.y() + img_y)
 
     def add_target_to_list(self, obj):
         self.item_list.new_target(obj)
@@ -143,6 +148,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.item_list.arrange_items(found_path)
 
     def save_to_file(self):
-        print(self.file_name)
         route_nodes = self.canvas.route_nodes
-        save_nodes_to_file(route_nodes, 0)
+        save_nodes_to_file(self.img_file, route_nodes)
+
+    def load_from_file(self):
+        dialog = QtWidgets.QFileDialog(self)
+        json_path, _ = dialog.getOpenFileName(self, "Load nodes", "")
+        if not os.path.exists(json_path):
+            return
+        loaded_nodes = load_nodes_from_file(json_path)
+        self.canvas.clear_all_nodes()
+        self.canvas.route_nodes = loaded_nodes

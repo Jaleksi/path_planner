@@ -1,5 +1,7 @@
 # Standard
 import math
+import json
+import os
 
 # 3rd party
 from PyQt5.QtWidgets import QListWidgetItem
@@ -71,6 +73,36 @@ def points_distance(p1, p2):
     return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
 
 
-def save_nodes_to_file(route_nodes, target_nodes):
-    r_nodes = [(n.x, n.y) for n in route_nodes]
-    print(r_nodes)
+def save_nodes_to_file(file_path, route_nodes):
+    node_dict = {}
+    for i, node in enumerate(route_nodes):
+        node_connections = [route_nodes.index(c) for c in node.connects_with]
+        node_dict[i] = {
+            'coords': (node.x, node.y),
+            'connects_with': node_connections
+        }
+
+    json_path = f'{os.path.splitext(file_path)[0]}.json'
+    with open(json_path, 'w', encoding='utf-8') as json_file:
+        json.dump(node_dict, json_file, indent=2)
+
+def load_nodes_from_file(path_to_json):
+    if not path_to_json.lower().endswith('.json'):
+        return
+
+    with open(path_to_json, 'r') as node_json:
+        node_dict = json.load(node_json)
+
+    # Create node-objects
+    node_objects = []
+    for i, node in node_dict.items():
+        x, y = node['coords']
+        new_node = RouteNode(x, y, (0, 0, 255))
+        node_objects.append(new_node)
+
+    # Add connections
+    for i, node_obj in enumerate(node_objects):
+        c_indexes = node_dict[str(i)]['connects_with']
+        node_obj.connects_with.extend([node_objects[i] for i in c_indexes])
+    
+    return node_objects

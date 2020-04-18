@@ -34,6 +34,14 @@ class Canvas(QtWidgets.QLabel):
     def allow_mode_change(self):
         return self.image is not None
 
+    def clear_all_nodes(self):
+        self.route_nodes = []
+        self.target_nodes = []
+        self.start_node = None
+        self.end_node = None
+        self.pairing_node = None
+        self.mode = 'route_edit'
+
     def clear_selections(self):
         self.selected_node = None
         self.pairing_node.pairing = False
