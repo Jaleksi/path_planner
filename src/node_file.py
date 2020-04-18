@@ -3,7 +3,6 @@ import math
 
 # 3rd party
 from PyQt5.QtWidgets import QListWidgetItem
-from PyQt5 import QtCore
 
 
 class RouteNode:
@@ -70,3 +69,8 @@ def closest_segment_point(point, route_pairs):
 def points_distance(p1, p2):
     '''Returns distance between two points'''
     return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+
+
+def save_nodes_to_file(route_nodes, target_nodes):
+    r_nodes = [(n.x, n.y) for n in route_nodes]
+    print(r_nodes)

@@ -7,11 +7,13 @@ from PyQt5 import QtWidgets
 # Local
 from .widgets.canvas import Canvas
 from .widgets.item_list import ItemList
+from .node_file import save_nodes_to_file
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
+        self.file_name = None
         self.setWindowTitle('route_finder')
         self.setGeometry(100, 100, 500, 500)
         self.init_layout()
@@ -46,13 +48,18 @@ class MainWindow(QtWidgets.QMainWindow):
         load_action = QtWidgets.QAction('Load image', self)
         load_action.triggered.connect(self.load_image)
 
+        # Save nodes
+        self.save_action = QtWidgets.QAction('Save nodes', self)
+        self.save_action.triggered.connect(self.save_to_file)
+        self.save_action.setEnabled(False)
+
         # Calculate path
         dijkstra_action = QtWidgets.QAction('Absolute shortest', self)
         dijkstra_action.triggered.connect(lambda: self.calculate_path('dijkstra'))
 
         tsp_action = QtWidgets.QAction('Approximate', self)
         tsp_action.triggered.connect(lambda: self.calculate_path('tsp'))
-        
+
         # Mode actions
         self.route_action = QtWidgets.QAction('Edit route', self)
         self.route_action.triggered.connect(lambda: self.set_mode('route_edit'))
@@ -66,7 +73,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         mb = self.menuBar()
         filemenu = mb.addMenu('File')
-        filemenu.addAction(load_action)
+        for item in [self.save_action, load_action]:
+            filemenu.addAction(item)
         self.path_menu = filemenu.addMenu('Calculate path')
         self.path_menu.addAction(dijkstra_action)
         self.path_menu.addAction(tsp_action)
@@ -105,10 +113,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def load_image(self):
         dialog = QtWidgets.QFileDialog(self)
         img_path, _ = dialog.getOpenFileName(self, "Load image", "")
-        if os.path.exists(img_path):
-            self.canvas.new_image(img_path)
-            self.resize(self.canvas.x() + self.canvas.image.width(),
-                        self.canvas.y() + self.canvas.image.height())
+        if not os.path.exists(img_path):
+            return
+
+        self.save_action.setEnabled(True)
+        self.file_name = os.path.basename(img_path)
+        self.canvas.new_image(img_path)
+        self.resize(self.canvas.x() + self.canvas.image.width(),
+                    self.canvas.y() + self.canvas.image.height())
 
     def add_target_to_list(self, obj):
         self.item_list.new_target(obj)
@@ -129,3 +141,8 @@ class MainWindow(QtWidgets.QMainWindow):
         found_path = self.canvas.shortest_path
         if found_path:
             self.item_list.arrange_items(found_path)
+
+    def save_to_file(self):
+        print(self.file_name)
+        route_nodes = self.canvas.route_nodes
+        save_nodes_to_file(route_nodes, 0)
