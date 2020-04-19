@@ -111,10 +111,7 @@ class PathManager:
         # Add 3 because start-/end-node + dummy are not included in targets
         num_of_nodes = len(self.target_nodes) + 3
         tsp_path = list(tsp(distances=distances, num_of_nodes=num_of_nodes))
-        start_index = self.get_start_node_index(node_indexes)
-        while tsp_path[0] != start_index:
-            tsp_path.insert(0, tsp_path.pop())
-        node_path = self.indexlist_to_path(node_indexes, paths, tsp_path)
+        node_path = self.indexlist_to_path(node_indexes, tsp_path, paths)
         return 0, node_path
 
     def target_nodes_distances(self):
@@ -146,18 +143,6 @@ class PathManager:
         
         return target_distances, target_paths, node_indexes
 
-    def indexlist_to_path(self, node_indexes, paths, tsp_path):
-        '''Make node-to-node path (list) from tsp-path, which is a list of indexes'''
-        shortest_path = []
-        for i, node_index in enumerate(tsp_path[:-1]):
-            node = node_indexes[node_index]
-            next_node = node_indexes[tsp_path[i+1]]
-            path_between_nodes = self.get_path_between_nodes(node, next_node, paths)
-            shortest_path.extend(path_between_nodes)
-        shortest_path.append(self.end_node)
-        return shortest_path
-
-
     def get_path_between_nodes(self, n1, n2, paths):
         '''Find path between nodes which was calculated earlier in target_nodes_distances()'''
         for route in paths:
@@ -168,8 +153,28 @@ class PathManager:
                 return list(route[2][::-1][:-1])
         return None
 
-    def get_start_node_index(self, index_list):
-        for index, node in index_list.items():
-            if node == self.start_node:
-                return index
-        return None
+    def indexlist_to_path(self, index_dict, tsp_path, paths):
+        '''
+        tsp_path: path by node indexes
+        index_dict: dict of node indexes
+        '''
+        path = [index_dict[i] for i in tsp_path]
+        
+        # Rotate until dummy-node is first
+        while path[0] != 'dummy':
+            path = path[-1:] + path[:-1]
+        
+        # Remove first item (dummy node) from list
+        node_path = path[1:]
+        
+        # If start node is at the start of list keep it that way, else reverse list
+        # as the first is end node.
+        node_path = node_path if node_path[0] == self.start_node else node_path[::-1]
+
+        shortest_path = []
+        for node, next_node in zip(node_path[:-1], node_path[1:]):
+            path_between_nodes = self.get_path_between_nodes(node, next_node, paths)
+            shortest_path.extend(path_between_nodes)
+        shortest_path.append(self.end_node)
+        return shortest_path
+

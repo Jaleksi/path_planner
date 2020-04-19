@@ -30,6 +30,7 @@ class Canvas(QtWidgets.QLabel):
         if mode != 'view' and self.shortest_path:
             self.shortest_path = []
         self.mode = mode
+        self.update()
 
     def allow_mode_change(self):
         return self.image is not None
