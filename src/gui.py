@@ -49,8 +49,9 @@ class MainWindow(QtWidgets.QMainWindow):
         load_action.triggered.connect(self.load_image)
 
         # Load nodes
-        node_load_action = QtWidgets.QAction('Load nodes', self)
-        node_load_action.triggered.connect(self.load_from_file)
+        self.node_load_action = QtWidgets.QAction('Load nodes', self)
+        self.node_load_action.triggered.connect(self.load_from_file)
+        self.node_load_action.setEnabled(False)
 
         # Save nodes
         self.save_action = QtWidgets.QAction('Save nodes', self)
@@ -77,7 +78,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         mb = self.menuBar()
         filemenu = mb.addMenu('File')
-        for item in [self.save_action, node_load_action, load_action]:
+        for item in [self.save_action, self.node_load_action, load_action]:
             filemenu.addAction(item)
         self.path_menu = filemenu.addMenu('Calculate path')
         self.path_menu.addAction(dijkstra_action)
@@ -87,14 +88,12 @@ class MainWindow(QtWidgets.QMainWindow):
         filemenu.addAction(exit_action)
 
         modemenu = mb.addMenu('Mode')
-        modemenu_items = [self.view_action, self.route_action, self.target_action]
-        for item in modemenu_items:
+        for item in [self.view_action, self.route_action, self.target_action]:
             modemenu.addAction(item)
 
     def set_mode(self, mode):
         if not self.canvas.allow_mode_change():
             return
-        assert mode in ['view', 'target_edit', 'route_edit'], f'{mode} not valid mode'
         self.toggle_menu_buttons(mode)
         self.canvas.change_mode(mode)
 
@@ -121,11 +120,16 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         self.save_action.setEnabled(True)
+        self.node_load_action.setEnabled(True)
         self.img_file = img_path
         self.canvas.new_image(img_path)
         img_x = self.canvas.image.width()
         img_y = self.canvas.image.height()
         self.resize(self.canvas.x() + img_x, self.canvas.y() + img_y)
+        
+        saved_node_file = f'{os.path.splitext(img_path)[0]}.json'
+        if os.path.exists(saved_node_file):
+            self.load_from_file(saved_node_file)
 
     def add_target_to_list(self, obj):
         self.item_list.new_target(obj)
@@ -150,12 +154,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def save_to_file(self):
         route_nodes = self.canvas.route_nodes
         save_nodes_to_file(self.img_file, route_nodes)
+        self.display_message(f'Nodes saved!')
 
-    def load_from_file(self):
-        dialog = QtWidgets.QFileDialog(self)
-        json_path, _ = dialog.getOpenFileName(self, "Load nodes", "")
-        if not os.path.exists(json_path):
-            return
+    def load_from_file(self, json_path=None):
+        if not json_path:
+            dialog = QtWidgets.QFileDialog(self)
+            json_path, _ = dialog.getOpenFileName(self, "Load nodes", "")
+            if not os.path.exists(json_path):
+                return
         loaded_nodes = load_nodes_from_file(json_path)
         self.canvas.clear_all_nodes()
         self.canvas.route_nodes = loaded_nodes

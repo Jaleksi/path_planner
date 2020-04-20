@@ -286,9 +286,6 @@ class Canvas(QtWidgets.QLabel):
         if event.buttons() == QtCore.Qt.LeftButton:
             if self.mode == 'route_edit' and self.selected_node is None:
                 self.add_route_node()
-            # DEBUG
-            elif self.mode == 'route_edit' and self.selected_node is not None:
-                print(self.selected_node)
             elif self.mode == 'pairing' and self.selected_node is not None:
                 self.new_connection()
             elif self.mode == 'target_edit':
