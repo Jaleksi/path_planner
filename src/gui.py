@@ -77,19 +77,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self.target_action.triggered.connect(lambda: self.set_mode('target_edit'))
 
         mb = self.menuBar()
-        filemenu = mb.addMenu('File')
-        for item in [self.save_action, self.node_load_action, load_action]:
-            filemenu.addAction(item)
-        self.path_menu = filemenu.addMenu('Calculate path')
-        self.path_menu.addAction(dijkstra_action)
-        self.path_menu.addAction(tsp_action)
-        self.path_menu.setEnabled(False)
 
-        filemenu.addAction(exit_action)
+        filemenu = mb.addMenu('File')
+        for item in [load_action, self.save_action, self.node_load_action, exit_action]:
+            filemenu.addAction(item)
 
         modemenu = mb.addMenu('Mode')
         for item in [self.view_action, self.route_action, self.target_action]:
             modemenu.addAction(item)
+
+        self.path_menu = mb.addMenu('Calculate path')
+        self.path_menu.setEnabled(False)
+        for item in [dijkstra_action, tsp_action]:
+            self.path_menu.addAction(item)
 
     def set_mode(self, mode):
         if not self.canvas.allow_mode_change():
