@@ -42,6 +42,7 @@ class Canvas(QtWidgets.QLabel):
         self.end_node = None
         self.pairing_node = None
         self.mode = 'route_edit'
+        self.update()
 
     def clear_selections(self):
         self.selected_node = None
@@ -49,6 +50,7 @@ class Canvas(QtWidgets.QLabel):
         self.pairing_node = None
         self.mode = 'route_edit'
         self.toggle_menu_signal.emit('route_edit')
+        self.update()
 
     def set_pen_style(self, pen, style):
         color = {

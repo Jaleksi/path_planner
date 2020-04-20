@@ -58,6 +58,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.save_action.triggered.connect(self.save_to_file)
         self.save_action.setEnabled(False)
 
+        # Clear all
+        clear_action = QtWidgets.QAction('Clear all nodes', self)
+        clear_action.triggered.connect(self.canvas.clear_all_nodes)
+
         # Calculate path
         dijkstra_action = QtWidgets.QAction('Absolute shortest', self)
         dijkstra_action.triggered.connect(lambda: self.calculate_path('dijkstra'))
@@ -79,7 +83,8 @@ class MainWindow(QtWidgets.QMainWindow):
         mb = self.menuBar()
 
         filemenu = mb.addMenu('File')
-        for item in [load_action, self.save_action, self.node_load_action, exit_action]:
+        for item in [load_action, self.save_action, self.node_load_action,
+                     clear_action, exit_action]:
             filemenu.addAction(item)
 
         modemenu = mb.addMenu('Mode')
@@ -117,6 +122,12 @@ class MainWindow(QtWidgets.QMainWindow):
         dialog = QtWidgets.QFileDialog(self)
         img_path, _ = dialog.getOpenFileName(self, "Load image", "")
         if not os.path.exists(img_path):
+            return
+
+        supported_image_formats = ['.jpg', '.png']
+        given_image_ext = os.path.splitext(img_path)[1].lower()
+        if given_image_ext not in supported_image_formats:
+            self.display_message(f'{given_image_ext} not a valid format')
             return
 
         self.save_action.setEnabled(True)
@@ -162,6 +173,9 @@ class MainWindow(QtWidgets.QMainWindow):
             json_path, _ = dialog.getOpenFileName(self, "Load nodes", "")
             if not os.path.exists(json_path):
                 return
-        loaded_nodes = load_nodes_from_file(json_path)
-        self.canvas.clear_all_nodes()
-        self.canvas.route_nodes = loaded_nodes
+        try:
+            loaded_nodes = load_nodes_from_file(json_path)
+            self.canvas.clear_all_nodes()
+            self.canvas.route_nodes = loaded_nodes
+        except Exception as err:
+            self.display_message(f'Could not load nodes: {err}')
