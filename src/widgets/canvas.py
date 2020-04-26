@@ -212,6 +212,10 @@ class Canvas(QtWidgets.QLabel):
 
     # Target-related methods
     def add_target_node(self):
+        unconnected_nodes = any([True for n in self.route_nodes if not n.connects_with])
+        if len(self.route_nodes) < 2 or unconnected_nodes:
+            self.info_signal.emit('Draw route and connect all nodes first')
+            return
         txt, done = QtWidgets.QInputDialog.getText(self, 'New target', 'Target name:')
         if not done or txt == '':
             return
