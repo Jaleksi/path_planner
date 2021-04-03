@@ -14,9 +14,10 @@ class RouteNode:
         self.connects_with = []
         self.color = color
         self.pairing = False
+        self.reach_radius = 10
 
     def within_reach(self, mpos):
-        return points_distance((self.x, self.y), mpos) <= 10
+        return points_distance((self.x, self.y), mpos) <= self.reach_radius
 
 
 class TargetNode(QListWidgetItem):

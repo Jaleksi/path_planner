@@ -18,7 +18,7 @@ class Canvas(QtWidgets.QLabel):
         self.route_nodes = []
         self.start_node = None
         self.end_node = None
-        self.mode = 'route_edit'
+        self.mode = 'view'
         self.shortest_path = []
         self.selected_node = None
         self.pairing_node = None

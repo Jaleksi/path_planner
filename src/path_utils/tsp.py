@@ -1,4 +1,4 @@
-from mlrose import TravellingSales, TSPOpt, genetic_alg
+from mlrose_hiive import TravellingSales, TSPOpt, genetic_alg
 
 def tsp(distances=None, num_of_nodes=None):
     '''https://mlrose.readthedocs.io/en/stable/source/tutorial2.html'''
